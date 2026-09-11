@@ -1,5 +1,5 @@
 /* ============================================================
-   Taller Biker — Control de vehículos
+   Taller Biker — Control de motos
    Todo se guarda en el navegador de esta computadora (localStorage).
    ============================================================ */
 
@@ -18,10 +18,10 @@ const AJUSTES_DEF = {
   usuario: '',
   nombre: 'Taller Biker',
   telefono: '',
-  moneda: 'C$',
+  moneda: '₡',
   diasAviso: 5,
   diasUrgente: 10,
-  tema: 'claro'
+  tema: 'oscuro'
 };
 
 const MESES = ['enero','febrero','marzo','abril','mayo','junio',
@@ -88,7 +88,7 @@ function fmtFecha(iso) {
 
 function fmtMoneda(n) {
   const v = Number(n) || 0;
-  return DB.ajustes.moneda + ' ' + v.toLocaleString('es-NI', {
+  return DB.ajustes.moneda + ' ' + v.toLocaleString('es-ES', {
     minimumFractionDigits: 2, maximumFractionDigits: 2
   });
 }
@@ -132,8 +132,9 @@ function esc(txt) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+/** El taller solo recibe motos, así que basta con marca y modelo. */
 function descripcionVehiculo(v) {
-  return [v.tipo, v.marca, v.modelo].filter(Boolean).join(' ') || '—';
+  return [v.marca, v.modelo].filter(Boolean).join(' ') || 'Moto';
 }
 
 let toastTimer;
@@ -232,7 +233,7 @@ function renderPanel() {
   const alertas = conAlerta.sort((a, b) => diasEnTaller(b) - diasEnTaller(a));
   $('#listaAlertas').innerHTML = alertas.length
     ? alertas.map(filaItem).join('')
-    : `<p class="vacio">Ningún vehículo pasa de ${DB.ajustes.diasAviso} días. Todo al día.</p>`;
+    : `<p class="vacio">Ninguna moto pasa de ${DB.ajustes.diasAviso} días. Todo al día.</p>`;
 
   // En el taller
   const lista = enTaller.slice().sort((a, b) => diasEnTaller(b) - diasEnTaller(a));
@@ -383,7 +384,7 @@ function renderAjustes() {
 
 function renderTodo() {
   $('#nombreTaller').textContent = DB.ajustes.nombre || 'Taller';
-  document.title = `${DB.ajustes.nombre || 'Taller'} — Control de Vehículos`;
+  document.title = `${DB.ajustes.nombre || 'Taller'} — Control de Motos`;
   aplicarTema();
   renderSaludo();
   renderPanel();
@@ -478,10 +479,9 @@ function abrirFormulario(id) {
   const esNuevo = !id;
   const v = esNuevo ? null : DB.vehiculos.find(x => x.id === id);
 
-  $('#tituloForm').textContent = esNuevo ? 'Registrar entrada' : 'Editar vehículo';
+  $('#tituloForm').textContent = esNuevo ? 'Registrar entrada' : 'Editar moto';
   $('#fId').value = esNuevo ? '' : v.id;
   $('#fPlaca').value = esNuevo ? '' : v.placa;
-  $('#fTipo').value = esNuevo ? 'Moto' : (v.tipo || 'Moto');
   $('#fMarca').value = esNuevo ? '' : (v.marca || '');
   $('#fModelo').value = esNuevo ? '' : (v.modelo || '');
   $('#fColor').value = esNuevo ? '' : (v.color || '');
@@ -505,7 +505,7 @@ function guardarFormulario(ev) {
   const id = $('#fId').value;
   const datos = {
     placa: $('#fPlaca').value.trim().toUpperCase(),
-    tipo: $('#fTipo').value,
+    tipo: 'Moto',
     marca: $('#fMarca').value.trim(),
     modelo: $('#fModelo').value.trim(),
     color: $('#fColor').value.trim(),
@@ -716,7 +716,7 @@ function importarRespaldo(archivo) {
     try {
       const datos = JSON.parse(lector.result);
       if (!Array.isArray(datos.vehiculos)) throw new Error('formato');
-      if (!confirm(`El respaldo tiene ${datos.vehiculos.length} vehículos. Esto reemplaza los datos actuales. ¿Continuar?`)) return;
+      if (!confirm(`El respaldo tiene ${datos.vehiculos.length} motos. Esto reemplaza los datos actuales. ¿Continuar?`)) return;
       DB.vehiculos = datos.vehiculos;
       DB.ajustes = { ...AJUSTES_DEF, ...(datos.ajustes || {}) };
       DB.meta = { ultimoRespaldo: null, ...(datos.meta || {}) };
@@ -768,34 +768,34 @@ function cargarDemo() {
   };
 
   const demo = [
-    { placa: 'M 145-872', tipo: 'Moto', marca: 'Honda', modelo: 'CG 150', color: 'Rojo',
+    { placa: 'M 145-872', marca: 'Honda', modelo: 'CG 150', color: 'Rojo',
       cliente: 'Luis Martínez', telefono: '8845-1122', problema: 'No enciende, posible falla de bujía',
-      fechaIngreso: hace(2), estado: 'diagnostico', mecanico: 'Carlos', presupuesto: 1200, abono: 0 },
-    { placa: 'M 220-431', tipo: 'Moto', marca: 'Yamaha', modelo: 'YBR 125', color: 'Negro',
+      fechaIngreso: hace(2), estado: 'diagnostico', mecanico: 'Carlos', presupuesto: 18000, abono: 0 },
+    { placa: 'M 220-431', marca: 'Yamaha', modelo: 'YBR 125', color: 'Negro',
       cliente: 'Ana Rivas', telefono: '8790-6633', problema: 'Cambio de aceite y ajuste de frenos',
-      fechaIngreso: hace(6), estado: 'reparacion', mecanico: 'Carlos', presupuesto: 850, abono: 400 },
-    { placa: 'M 098-115', tipo: 'Moto', marca: 'Suzuki', modelo: 'GN 125', color: 'Azul',
+      fechaIngreso: hace(6), estado: 'reparacion', mecanico: 'Carlos', presupuesto: 14000, abono: 5000 },
+    { placa: 'M 098-115', marca: 'Suzuki', modelo: 'GN 125', color: 'Azul',
       cliente: 'Pedro Gómez', telefono: '8511-9087', problema: 'Cambio de cadena y piñones, se espera repuesto',
-      fechaIngreso: hace(14), estado: 'repuesto', mecanico: 'Jairo', presupuesto: 2300, abono: 1000 },
-    { placa: 'M 331-706', tipo: 'Moto', marca: 'Bajaj', modelo: 'Pulsar 180', color: 'Blanco',
+      fechaIngreso: hace(14), estado: 'repuesto', mecanico: 'Jairo', presupuesto: 38000, abono: 15000 },
+    { placa: 'M 331-706', marca: 'Bajaj', modelo: 'Pulsar 180', color: 'Blanco',
       cliente: 'María Sequeira', telefono: '8633-2211', problema: 'Revisión de embrague',
-      fechaIngreso: hace(1), estado: 'recibido', mecanico: '', presupuesto: 1500, abono: 0 },
-    { placa: 'M 777-004', tipo: 'Cuadraciclo', marca: 'Honda', modelo: 'TRX 250', color: 'Verde',
-      cliente: 'Taller El Sol', telefono: '2255-7788', problema: 'Mantenimiento general',
-      fechaIngreso: hace(9), estado: 'listo', mecanico: 'Jairo', presupuesto: 3200, abono: 3200 },
-    { placa: 'M 412-559', tipo: 'Moto', marca: 'Honda', modelo: 'XR 150', color: 'Negro',
+      fechaIngreso: hace(1), estado: 'recibido', mecanico: '', presupuesto: 22000, abono: 0 },
+    { placa: 'M 777-004', marca: 'Honda', modelo: 'Navi 110', color: 'Verde',
+      cliente: 'Marcos Ulate', telefono: '2255-7788', problema: 'Mantenimiento general',
+      fechaIngreso: hace(9), estado: 'listo', mecanico: 'Jairo', presupuesto: 45000, abono: 45000 },
+    { placa: 'M 412-559', marca: 'Honda', modelo: 'XR 150', color: 'Negro',
       cliente: 'Julio Blandón', telefono: '8899-4411', problema: 'Reparación de arranque eléctrico',
       fechaIngreso: hace(22), estado: 'entregado', mecanico: 'Carlos',
-      presupuesto: 1800, montoFinal: 2100, abono: 2100, fechaEntrega: hace(17) },
-    { placa: 'M 660-238', tipo: 'Moto', marca: 'Yamaha', modelo: 'FZ 150', color: 'Gris',
+      presupuesto: 28000, montoFinal: 32000, abono: 32000, fechaEntrega: hace(17) },
+    { placa: 'M 660-238', marca: 'Yamaha', modelo: 'FZ 150', color: 'Gris',
       cliente: 'Rosa Delgado', telefono: '8322-9910', problema: 'Cambio de llantas y balanceo',
       fechaIngreso: hace(12), estado: 'entregado', mecanico: 'Jairo',
-      presupuesto: 4000, montoFinal: 4350, abono: 2000, fechaEntrega: hace(8) }
+      presupuesto: 60000, montoFinal: 65000, abono: 40000, fechaEntrega: hace(8) }
   ];
 
   demo.forEach(d => {
     DB.vehiculos.push({
-      id: uid(), notas: '', montoFinal: null, fechaEntrega: null, ...d,
+      id: uid(), tipo: 'Moto', notas: '', montoFinal: null, fechaEntrega: null, ...d,
       historial: [{ fecha: d.fechaIngreso, texto: 'Ingresó al taller' }]
         .concat(d.fechaEntrega ? [{ fecha: d.fechaEntrega, texto: 'Entregado al cliente' }] : [])
     });
@@ -836,6 +836,9 @@ function iniciar() {
   if (!DB.ajustes.usuario) pedirNombre();
 
   $('#btnTema').addEventListener('click', alternarTema);
+  $('#bNombre').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); $('#formBienvenida').requestSubmit(); }
+  });
   $('#formBienvenida').addEventListener('submit', (ev) => {
     ev.preventDefault();
     DB.ajustes.usuario = $('#bNombre').value.trim().slice(0, 30);
@@ -903,7 +906,7 @@ function iniciar() {
     DB.ajustes.usuario = $('#setUsuario').value.trim().slice(0, 30);
     DB.ajustes.nombre = $('#setNombre').value.trim() || 'Taller';
     DB.ajustes.telefono = $('#setTelefono').value.trim();
-    DB.ajustes.moneda = $('#setMoneda').value.trim() || 'C$';
+    DB.ajustes.moneda = $('#setMoneda').value.trim() || '₡';
     DB.ajustes.diasAviso = Math.max(1, parseInt($('#setDiasAviso').value, 10) || 5);
     DB.ajustes.diasUrgente = Math.max(DB.ajustes.diasAviso, parseInt($('#setDiasUrgente').value, 10) || 10);
     guardar();
@@ -924,7 +927,7 @@ function iniciar() {
   // Demo y borrado
   $('#btnDemo').addEventListener('click', cargarDemo);
   $('#btnBorrarTodo').addEventListener('click', () => {
-    if (!confirm('Esto borra TODOS los vehículos registrados. ¿Seguro?')) return;
+    if (!confirm('Esto borra TODAS las motos registradas. ¿Seguro?')) return;
     if (!confirm('Última confirmación: se perderán los datos que no estén respaldados.')) return;
     DB.vehiculos = [];
     guardar();

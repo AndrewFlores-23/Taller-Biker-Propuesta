@@ -3,14 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Taller Biker — Control de Vehículos</title>
+<title>Taller Biker — Control de Motos</title>
 <link rel="stylesheet" href="styles.css">
 <script>
-  // Se aplica antes de dibujar la página para que no parpadee en blanco.
-  try {
-    var g = JSON.parse(localStorage.getItem('tallerBiker.v1') || '{}');
-    if (g.ajustes && g.ajustes.tema === 'oscuro') document.documentElement.dataset.tema = 'oscuro';
-  } catch (e) {}
+  // El tema de fábrica es oscuro; solo se aclara si el usuario lo eligió así.
+  // Se aplica antes de dibujar la página para que no parpadee.
+  (function () {
+    var tema = 'oscuro';
+    try {
+      var g = JSON.parse(localStorage.getItem('tallerBiker.v1') || '{}');
+      if (g.ajustes && g.ajustes.tema === 'claro') tema = 'claro';
+    } catch (e) {}
+    document.documentElement.dataset.tema = tema;
+  })();
 </script>
 </head>
 <body>
@@ -31,7 +36,7 @@
 
 <nav class="tabs">
   <button class="tab activo" data-vista="panel">Panel</button>
-  <button class="tab" data-vista="vehiculos">Vehículos</button>
+  <button class="tab" data-vista="vehiculos">Motos</button>
   <button class="tab" data-vista="reportes">Reportes</button>
   <button class="tab" data-vista="ajustes">Ajustes</button>
 </nav>
@@ -55,7 +60,7 @@
       <div class="kpi">
         <span class="kpi-label">En el taller</span>
         <strong class="kpi-valor" id="kpiEnTaller">0</strong>
-        <span class="kpi-pie muted">vehículos sin entregar</span>
+        <span class="kpi-pie muted">motos sin entregar</span>
       </div>
       <div class="kpi kpi-alerta">
         <span class="kpi-label">Atrasados</span>
@@ -86,7 +91,7 @@
     </div>
   </section>
 
-  <!-- ================= VEHÍCULOS ================= -->
+  <!-- ================= MOTOS ================= -->
   <section id="vista-vehiculos" class="vista oculto">
     <div class="card">
       <div class="filtros">
@@ -105,7 +110,7 @@
           <thead>
             <tr>
               <th>Placa</th>
-              <th>Vehículo</th>
+              <th>Moto</th>
               <th>Cliente</th>
               <th>Problema</th>
               <th>Ingreso</th>
@@ -118,7 +123,7 @@
           <tbody id="tablaVehiculos"></tbody>
         </table>
       </div>
-      <p id="vacioVehiculos" class="vacio oculto">No hay vehículos que coincidan.</p>
+      <p id="vacioVehiculos" class="vacio oculto">No hay motos que coincidan.</p>
     </div>
   </section>
 
@@ -195,7 +200,7 @@
           <input type="text" id="setTelefono" placeholder="Aparece en la orden impresa">
         </label>
         <label class="campo">Símbolo de moneda
-          <input type="text" id="setMoneda" maxlength="5" placeholder="C$">
+          <input type="text" id="setMoneda" maxlength="5" placeholder="₡">
         </label>
         <div class="fila">
           <label class="campo">Avisar a los (días)
@@ -220,7 +225,7 @@
         </div>
         <hr>
         <h2>Datos de prueba</h2>
-        <p class="muted mini">Carga vehículos de ejemplo para ver cómo funciona el sistema. Puedes borrarlos después.</p>
+        <p class="muted mini">Carga motos de ejemplo para ver cómo funciona el sistema. Puedes borrarlos después.</p>
         <div class="fila-btns">
           <button class="btn btn-ghost" id="btnDemo">Cargar ejemplos</button>
           <button class="btn btn-peligro" id="btnBorrarTodo">Borrar todo</button>
@@ -257,28 +262,17 @@
         <label class="campo">Placa *
           <input type="text" id="fPlaca" required placeholder="M 123-456" autocomplete="off">
         </label>
-        <label class="campo">Tipo
-          <select id="fTipo">
-            <option>Moto</option>
-            <option>Carro</option>
-            <option>Camioneta</option>
-            <option>Cuadraciclo</option>
-            <option>Otro</option>
-          </select>
-        </label>
-      </div>
-      <div class="fila">
         <label class="campo">Marca
           <input type="text" id="fMarca" placeholder="Honda, Yamaha…" autocomplete="off">
         </label>
         <label class="campo">Modelo / año
           <input type="text" id="fModelo" placeholder="CG 150 / 2019" autocomplete="off">
         </label>
+      </div>
+      <div class="fila">
         <label class="campo">Color
           <input type="text" id="fColor" autocomplete="off">
         </label>
-      </div>
-      <div class="fila">
         <label class="campo">Cliente
           <input type="text" id="fCliente" placeholder="Nombre del dueño" autocomplete="off">
         </label>
