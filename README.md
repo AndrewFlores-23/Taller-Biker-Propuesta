@@ -10,11 +10,12 @@ el navegador de la computadora del taller y guarda todo en esa misma máquina.
 ## Cómo se usa
 
 1. Abrir el archivo `index.html` (doble clic) o entrar a la vista previa publicada.
-2. **Ajustes** → poner el nombre del taller, el teléfono, la moneda y los días de alerta.
-3. **+ Registrar entrada** cada vez que llega un vehículo.
-4. Ir cambiando el estado mientras se repara (diagnóstico → reparación → listo).
-5. Al entregar: **Registrar entrega** con el monto realmente cobrado.
-6. **Reportes** → elegir el mes para ver lo facturado.
+2. La primera vez pide el nombre de quien lo va a usar (solo se guarda en esa computadora).
+3. **Ajustes** → poner el nombre del taller, el teléfono, la moneda y los días de alerta.
+4. **+ Registrar entrada** cada vez que llega un vehículo.
+5. Ir cambiando el estado mientras se repara (diagnóstico → reparación → listo).
+6. Al entregar: **Registrar entrega** con el monto realmente cobrado.
+7. **Reportes** → elegir el mes para ver lo facturado.
 
 Para probarlo sin registrar nada real: **Ajustes → Cargar ejemplos**.
 
@@ -31,6 +32,8 @@ Para probarlo sin registrar nada real: **Ajustes → Cargar ejemplos**.
 | Historial | Cada cambio de estado, nota y pago queda registrado con fecha |
 | Orden impresa | Hoja de orden de trabajo / recibo lista para imprimir |
 | Exportar | Respaldo completo en `.json` y facturación del mes en `.csv` para Excel |
+| Bienvenida | La primera vez que se abre en un navegador pide el nombre y luego saluda según la hora: "Hola Julio 👋 · Que tengas bonito día / bonita tarde / bonita noche" |
+| Modo oscuro | Botón 🌙 / ☀️ en la barra superior; la preferencia queda guardada en ese navegador |
 
 ## Dónde se guardan los datos
 

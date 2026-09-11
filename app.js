@@ -15,11 +15,13 @@ const ESTADOS = {
 };
 
 const AJUSTES_DEF = {
+  usuario: '',
   nombre: 'Taller Biker',
   telefono: '',
   moneda: 'C$',
   diasAviso: 5,
-  diasUrgente: 10
+  diasUrgente: 10,
+  tema: 'claro'
 };
 
 const MESES = ['enero','febrero','marzo','abril','mayo','junio',
@@ -141,6 +143,43 @@ function aviso(msg) {
   t.classList.remove('oculto');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.add('oculto'), 2600);
+}
+
+/* ================== Tema y saludo ================== */
+
+function aplicarTema() {
+  const oscuro = DB.ajustes.tema === 'oscuro';
+  document.documentElement.dataset.tema = oscuro ? 'oscuro' : 'claro';
+  const btn = $('#btnTema');
+  btn.textContent = oscuro ? '☀️' : '🌙';
+  btn.title = oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+}
+
+function alternarTema() {
+  DB.ajustes.tema = DB.ajustes.tema === 'oscuro' ? 'claro' : 'oscuro';
+  aplicarTema();
+  guardar();
+}
+
+/** 'día' antes de las 12, 'tarde' hasta las 7 pm, 'noche' después. */
+function momentoDelDia() {
+  const h = new Date().getHours();
+  if (h < 12) return { palabra: 'día', articulo: 'bonito' };
+  if (h < 19) return { palabra: 'tarde', articulo: 'bonita' };
+  return { palabra: 'noche', articulo: 'bonita' };
+}
+
+function renderSaludo() {
+  const m = momentoDelDia();
+  const nombre = DB.ajustes.usuario;
+  $('#saludoHola').textContent = nombre ? `Hola ${nombre} 👋` : 'Hola 👋';
+  $('#saludoSub').textContent = `Que tengas ${m.articulo} ${m.palabra}.`;
+}
+
+function pedirNombre() {
+  $('#bNombre').value = '';
+  abrirModal('#modalBienvenida');
+  setTimeout(() => $('#bNombre').focus(), 80);
 }
 
 function badgeEstado(estado) {
@@ -329,6 +368,7 @@ function renderBarrasAnio(anio) {
 /* ================== Render: Ajustes ================== */
 
 function renderAjustes() {
+  $('#setUsuario').value = DB.ajustes.usuario;
   $('#setNombre').value = DB.ajustes.nombre;
   $('#setTelefono').value = DB.ajustes.telefono;
   $('#setMoneda').value = DB.ajustes.moneda;
@@ -344,6 +384,8 @@ function renderAjustes() {
 function renderTodo() {
   $('#nombreTaller').textContent = DB.ajustes.nombre || 'Taller';
   document.title = `${DB.ajustes.nombre || 'Taller'} — Control de Vehículos`;
+  aplicarTema();
+  renderSaludo();
   renderPanel();
   renderVehiculos();
   renderReportes();
@@ -780,6 +822,7 @@ function cambiarVista(nombre) {
 
 function iniciar() {
   cargar();
+  aplicarTema();
   llenarSelectsEstado();
 
   const f = new Date();
@@ -788,6 +831,20 @@ function iniciar() {
   $('#mesReporte').value = mesActual();
 
   renderTodo();
+
+  // Primera vez en este navegador: preguntar el nombre
+  if (!DB.ajustes.usuario) pedirNombre();
+
+  $('#btnTema').addEventListener('click', alternarTema);
+  $('#formBienvenida').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    DB.ajustes.usuario = $('#bNombre').value.trim().slice(0, 30);
+    guardar();
+    renderTodo();
+    cerrarModal('#modalBienvenida');
+    const m = momentoDelDia();
+    aviso(`¡Hola ${DB.ajustes.usuario}! Que tengas ${m.articulo} ${m.palabra}.`);
+  });
 
   // Navegación
   $$('.tab').forEach(t => t.addEventListener('click', () => cambiarVista(t.dataset.vista)));
@@ -801,11 +858,13 @@ function iniciar() {
   $$('[data-cerrar]').forEach(b => b.addEventListener('click', () => {
     b.closest('.overlay').classList.add('oculto');
   }));
-  $$('.overlay').forEach(o => o.addEventListener('click', (ev) => {
+  // La bienvenida no se cierra sin responder; el resto sí.
+  const cerrables = () => $$('.overlay').filter(o => o.id !== 'modalBienvenida');
+  cerrables().forEach(o => o.addEventListener('click', (ev) => {
     if (ev.target === o) o.classList.add('oculto');
   }));
   document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape') $$('.overlay').forEach(o => o.classList.add('oculto'));
+    if (ev.key === 'Escape') cerrables().forEach(o => o.classList.add('oculto'));
   });
 
   // Clics en listas del panel
@@ -841,6 +900,7 @@ function iniciar() {
 
   // Ajustes
   $('#btnGuardarAjustes').addEventListener('click', () => {
+    DB.ajustes.usuario = $('#setUsuario').value.trim().slice(0, 30);
     DB.ajustes.nombre = $('#setNombre').value.trim() || 'Taller';
     DB.ajustes.telefono = $('#setTelefono').value.trim();
     DB.ajustes.moneda = $('#setMoneda').value.trim() || 'C$';
