@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller Biker — Control de Vehículos</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">TB</div>
+    <div>
+      <h1 id="nombreTaller">Taller Biker</h1>
+      <p id="fechaHoy" class="muted"></p>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-lg" id="btnNuevo">+ Registrar entrada</button>
+</header>
+
+<nav class="tabs">
+  <button class="tab activo" data-vista="panel">Panel</button>
+  <button class="tab" data-vista="vehiculos">Vehículos</button>
+  <button class="tab" data-vista="reportes">Reportes</button>
+  <button class="tab" data-vista="ajustes">Ajustes</button>
+</nav>
+
+<div id="avisoRespaldo" class="aviso oculto">
+  <span>Hace tiempo que no guardas un respaldo de los datos.</span>
+  <button class="btn btn-mini" id="btnRespaldoAviso">Respaldar ahora</button>
+  <button class="btn btn-mini btn-ghost" id="btnCerrarAviso">Después</button>
+</div>
+
+<main>
+
+  <!-- ================= PANEL ================= -->
+  <section id="vista-panel" class="vista">
+    <div class="kpis">
+      <div class="kpi">
+        <span class="kpi-label">En el taller</span>
+        <strong class="kpi-valor" id="kpiEnTaller">0</strong>
+        <span class="kpi-pie muted">vehículos sin entregar</span>
+      </div>
+      <div class="kpi kpi-alerta">
+        <span class="kpi-label">Atrasados</span>
+        <strong class="kpi-valor" id="kpiAtrasados">0</strong>
+        <span class="kpi-pie muted">pasaron el límite de días</span>
+      </div>
+      <div class="kpi kpi-ok">
+        <span class="kpi-label">Facturado este mes</span>
+        <strong class="kpi-valor" id="kpiFacturado">0</strong>
+        <span class="kpi-pie muted" id="kpiFacturadoPie">—</span>
+      </div>
+      <div class="kpi kpi-warn">
+        <span class="kpi-label">Pendiente de cobro</span>
+        <strong class="kpi-valor" id="kpiPorCobrar">0</strong>
+        <span class="kpi-pie muted">saldos sin pagar</span>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card">
+        <h2>Recordatorios</h2>
+        <div id="listaAlertas" class="lista"></div>
+      </div>
+      <div class="card">
+        <h2>En el taller ahora</h2>
+        <div id="listaActivos" class="lista"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VEHÍCULOS ================= -->
+  <section id="vista-vehiculos" class="vista oculto">
+    <div class="card">
+      <div class="filtros">
+        <input type="search" id="buscador" placeholder="Buscar por placa, cliente, teléfono o problema…">
+        <select id="filtroEstado">
+          <option value="">Todos los estados</option>
+        </select>
+        <select id="filtroRango">
+          <option value="activos">Solo en el taller</option>
+          <option value="todos">Todos</option>
+          <option value="entregados">Solo entregados</option>
+        </select>
+      </div>
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Placa</th>
+              <th>Vehículo</th>
+              <th>Cliente</th>
+              <th>Problema</th>
+              <th>Ingreso</th>
+              <th>Días</th>
+              <th>Estado</th>
+              <th class="der">Monto</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tablaVehiculos"></tbody>
+        </table>
+      </div>
+      <p id="vacioVehiculos" class="vacio oculto">No hay vehículos que coincidan.</p>
+    </div>
+  </section>
+
+  <!-- ================= REPORTES ================= -->
+  <section id="vista-reportes" class="vista oculto">
+    <div class="card">
+      <div class="filtros">
+        <label class="campo-inline">Mes:
+          <input type="month" id="mesReporte">
+        </label>
+        <button class="btn btn-ghost" id="btnExportarCsv">Descargar Excel (CSV)</button>
+      </div>
+
+      <div class="kpis kpis-4">
+        <div class="kpi kpi-ok">
+          <span class="kpi-label">Facturado en el mes</span>
+          <strong class="kpi-valor" id="repFacturado">0</strong>
+          <span class="kpi-pie muted" id="repComparacion">—</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Trabajos entregados</span>
+          <strong class="kpi-valor" id="repEntregados">0</strong>
+          <span class="kpi-pie muted">en el mes</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Promedio por trabajo</span>
+          <strong class="kpi-valor" id="repPromedio">0</strong>
+          <span class="kpi-pie muted">facturado ÷ entregados</span>
+        </div>
+        <div class="kpi kpi-warn">
+          <span class="kpi-label">Sin cobrar del mes</span>
+          <strong class="kpi-valor" id="repSaldo">0</strong>
+          <span class="kpi-pie muted">saldo pendiente</span>
+        </div>
+      </div>
+
+      <h2>Entregados en el mes</h2>
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Entrega</th>
+              <th>Placa</th>
+              <th>Cliente</th>
+              <th>Problema</th>
+              <th>Días</th>
+              <th class="der">Monto</th>
+              <th class="der">Abonado</th>
+              <th class="der">Saldo</th>
+            </tr>
+          </thead>
+          <tbody id="tablaReporte"></tbody>
+        </table>
+      </div>
+      <p id="vacioReporte" class="vacio oculto">Sin entregas registradas en este mes.</p>
+
+      <h2>Resumen del año <span id="anioResumen"></span></h2>
+      <div id="barrasAnio" class="barras"></div>
+    </div>
+  </section>
+
+  <!-- ================= AJUSTES ================= -->
+  <section id="vista-ajustes" class="vista oculto">
+    <div class="cols">
+      <div class="card">
+        <h2>Datos del taller</h2>
+        <label class="campo">Nombre del taller
+          <input type="text" id="setNombre" placeholder="Taller Biker">
+        </label>
+        <label class="campo">Teléfono / contacto
+          <input type="text" id="setTelefono" placeholder="Aparece en la orden impresa">
+        </label>
+        <label class="campo">Símbolo de moneda
+          <input type="text" id="setMoneda" maxlength="5" placeholder="C$">
+        </label>
+        <div class="fila">
+          <label class="campo">Avisar a los (días)
+            <input type="number" id="setDiasAviso" min="1" max="120">
+          </label>
+          <label class="campo">Urgente a los (días)
+            <input type="number" id="setDiasUrgente" min="1" max="180">
+          </label>
+        </div>
+        <button class="btn btn-primary" id="btnGuardarAjustes">Guardar ajustes</button>
+        <p class="muted mini">Un vehículo aparece en amarillo al pasar los días de aviso y en rojo al pasar los urgentes.</p>
+      </div>
+
+      <div class="card">
+        <h2>Respaldo de datos</h2>
+        <p class="muted mini">Los datos se guardan en esta computadora, en este navegador. Descarga un respaldo cada cierto tiempo y guárdalo en una memoria USB o en el correo.</p>
+        <p class="mini" id="infoRespaldo"></p>
+        <div class="fila-btns">
+          <button class="btn btn-primary" id="btnExportar">Descargar respaldo</button>
+          <button class="btn btn-ghost" id="btnImportar">Restaurar respaldo</button>
+          <input type="file" id="archivoImportar" accept=".json" class="oculto">
+        </div>
+        <hr>
+        <h2>Datos de prueba</h2>
+        <p class="muted mini">Carga vehículos de ejemplo para ver cómo funciona el sistema. Puedes borrarlos después.</p>
+        <div class="fila-btns">
+          <button class="btn btn-ghost" id="btnDemo">Cargar ejemplos</button>
+          <button class="btn btn-peligro" id="btnBorrarTodo">Borrar todo</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= MODAL FORMULARIO ================= -->
+<div class="overlay oculto" id="modalForm">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="tituloForm">Registrar entrada</h2>
+      <button class="cerrar" data-cerrar>&times;</button>
+    </div>
+    <form id="formVehiculo" class="modal-body">
+      <input type="hidden" id="fId">
+      <div class="fila">
+        <label class="campo">Placa *
+          <input type="text" id="fPlaca" required placeholder="M 123-456" autocomplete="off">
+        </label>
+        <label class="campo">Tipo
+          <select id="fTipo">
+            <option>Moto</option>
+            <option>Carro</option>
+            <option>Camioneta</option>
+            <option>Cuadraciclo</option>
+            <option>Otro</option>
+          </select>
+        </label>
+      </div>
+      <div class="fila">
+        <label class="campo">Marca
+          <input type="text" id="fMarca" placeholder="Honda, Yamaha…" autocomplete="off">
+        </label>
+        <label class="campo">Modelo / año
+          <input type="text" id="fModelo" placeholder="CG 150 / 2019" autocomplete="off">
+        </label>
+        <label class="campo">Color
+          <input type="text" id="fColor" autocomplete="off">
+        </label>
+      </div>
+      <div class="fila">
+        <label class="campo">Cliente
+          <input type="text" id="fCliente" placeholder="Nombre del dueño" autocomplete="off">
+        </label>
+        <label class="campo">Teléfono
+          <input type="text" id="fTelefono" autocomplete="off">
+        </label>
+      </div>
+      <label class="campo">¿Por qué entra? *
+        <textarea id="fProblema" required rows="2" placeholder="No enciende, cambio de aceite, frenos gastados…"></textarea>
+      </label>
+      <div class="fila">
+        <label class="campo">Fecha de ingreso *
+          <input type="date" id="fIngreso" required>
+        </label>
+        <label class="campo">Estado
+          <select id="fEstado"></select>
+        </label>
+        <label class="campo">Mecánico
+          <input type="text" id="fMecanico" autocomplete="off">
+        </label>
+      </div>
+      <div class="fila">
+        <label class="campo">Presupuesto estimado
+          <input type="number" id="fPresupuesto" min="0" step="0.01" placeholder="0.00">
+        </label>
+        <label class="campo">Abono / adelanto
+          <input type="number" id="fAbono" min="0" step="0.01" placeholder="0.00">
+        </label>
+      </div>
+      <label class="campo">Notas
+        <textarea id="fNotas" rows="2" placeholder="Repuestos pedidos, detalles del cliente…"></textarea>
+      </label>
+      <div class="modal-pie">
+        <button type="button" class="btn btn-ghost" data-cerrar>Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL DETALLE ================= -->
+<div class="overlay oculto" id="modalDetalle">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="tituloDetalle">Detalle</h2>
+      <button class="cerrar" data-cerrar>&times;</button>
+    </div>
+    <div class="modal-body" id="cuerpoDetalle"></div>
+  </div>
+</div>
+
+<!-- ================= MODAL ENTREGA ================= -->
+<div class="overlay oculto" id="modalEntrega">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h2>Registrar entrega y cobro</h2>
+      <button class="cerrar" data-cerrar>&times;</button>
+    </div>
+    <form id="formEntrega" class="modal-body">
+      <input type="hidden" id="eId">
+      <p class="muted mini" id="eResumen"></p>
+      <label class="campo">Fecha de entrega *
+        <input type="date" id="eFecha" required>
+      </label>
+      <label class="campo">Monto total cobrado *
+        <input type="number" id="eMonto" min="0" step="0.01" required>
+      </label>
+      <label class="campo">Total abonado por el cliente
+        <input type="number" id="eAbono" min="0" step="0.01">
+      </label>
+      <label class="campo">Trabajo realizado
+        <textarea id="eTrabajo" rows="2" placeholder="Qué se le hizo al vehículo"></textarea>
+      </label>
+      <div class="modal-pie">
+        <button type="button" class="btn btn-ghost" data-cerrar>Cancelar</button>
+        <button type="submit" class="btn btn-primary">Marcar entregado</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="toast oculto"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
